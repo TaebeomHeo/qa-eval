@@ -1,0 +1,12 @@
+id	Question	Model answer	Acceptable?	annotator1	annotator2	annotator3
+1	where are the washington redskins based out of	washington metropolitan area	Yes	Yes	Yes	
+1	where are the washington redskins based out of	The Washington Redskins are based out of Landover, Maryland.	Yes	Yes	Yes	
+1	where are the washington redskins based out of	washington, d. c.	Yes	Yes	Yes	
+1	where are the washington redskins based out of	Washington, D.C.	Yes	Yes	Yes	
+1	where are the washington redskins based out of	Landover , Maryland	Yes	Yes	Yes	
+2	the boiling point of water is 100 degrees celsius express this in si units	373.15 K	Yes	Yes	No	Yes
+2	the boiling point of water is 100 degrees celsius express this in si units	kelvin	No	No	No	
+2	the boiling point of water is 100 degrees celsius express this in si units	centigrade	No	No	No	
+2	the boiling point of water is 100 degrees celsius express this in si units	k	No	No	No	
+2	the boiling point of water is 100 degrees celsius express this in si units	Celsius	No	No	Yes	No
+2	the boiling point of water is 100 degrees celsius express this in si units	100°C = 373.15 K	Yes	Yes	No	Yes

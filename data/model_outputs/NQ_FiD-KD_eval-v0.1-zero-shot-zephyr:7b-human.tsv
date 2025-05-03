@@ -1,0 +1,6 @@
+id	Question	Gold answers	Model answer	EM	F1	AnnotatedEM	zephyr:7b	Response
+	where are the washington redskins based out of	['FedExField in Landover, Maryland', 'the Washington metropolitan area']	Washington metropolitan area	1	1.0	1	1	"Judgment: yes
+
+Explanation:
+The candidate's answer is a broader location that includes FedExField in Landover, Maryland. Therefore, it can be considered correct based on the ground-truth answers provided. The Washington metropolitan area encompasses the city of Washington D.C. And its surrounding suburbs in Virginia and Maryland, where FedExField is located."	[1]
+	the boiling point of water is 100 degrees celsius express this in si units	['100\xa0°C']	Celsius	0	0	0	1	Yes, the candidate answer is correct. In SI units, the boiling point of water is approximately 373.15 K (Kelvin) or 1000 °C (celsius). The candidate provided the unit, which indicates that they understand the relationship between Celsius and Kelvin in SI units. Therefore, we can confidently say that the candidate answer is relevant and correct based on commonsense reasoning and our internal knowledge of physical measurements.	[1]

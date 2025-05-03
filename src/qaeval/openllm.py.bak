@@ -17,7 +17,6 @@ from transformers import (
     DataCollatorWithPadding,
     DataCollatorForSeq2Seq,
 )
-import requests
 
 from .data_utils import Candidate
 
@@ -272,39 +271,56 @@ def llm_eval(model_name_or_path: str, candidates, **kwargs):
 
     assert prompt_file and os.path.exists(prompt_file), "prompt_file is required in llm_eval"
 
-    examples = _prepare(candidates, prompt_file, model_name_or_path, context_file)
-    
-    # Ollama API로 프롬프트 전송 및 응답 수집
-    responses = []
-    for prompt in tqdm(examples):
-        # chat 형식이면 마지막 user 메시지만 추출
-        if isinstance(prompt, list):
-            if prompt[-1]["role"] == "user":
-                prompt_text = prompt[-1]["content"]
-            else:
-                prompt_text = prompt[-1]
-        else:
-            prompt_text = prompt
-        try:
-            resp = requests.post(
-                "http://localhost:11434/api/generate",
-                json={"model": model_name_or_path, "prompt": prompt_text, "stream": False}
-            )
-            result = resp.json()
-            responses.append(result["response"])
-        except Exception as e:
-            logger.warning(f"Ollama API 호출 실패: {e}")
-            responses.append("")
+    config = AutoConfig.from_pretrained(model_name_or_path)
+    if config.is_encoder_decoder:
+        model = AutoModelForSeq2SeqLM.from_pretrained(
+            model_name_or_path, device_map="auto", **MODEL_KWARGS.get(model_name_or_path, {})
+        )
+    else:
+        model = AutoModelForCausalLM.from_pretrained(
+            model_name_or_path, device_map="auto", low_cpu_mem_usage=True, **MODEL_KWARGS.get(model_name_or_path, {})
+        )
+
+    tokenizer = AutoTokenizer.from_pretrained(
+        model_name_or_path, use_fast=True, **TOKENIZER_KWARGS.get(model_name_or_path, {})
+    )
+    tokenizer.use_default_system_prompt = False
+    tokenizer.deprecation_warnings["Asking-to-pad-a-fast-tokenizer"] = True
+    if not tokenizer.pad_token:
+        tokenizer.pad_token = tokenizer.eos_token
+
+    is_conversational_true = _is_conversational(model.config.name_or_path)
+
+    examples = _prepare(candidates, prompt_file, model.config.name_or_path, context_file)
+    responses = run_inference(examples, model, tokenizer, **kwargs, num_return_sequences=num_return_sequences)
     original_responses = responses
 
-    # 기존 LLM 평가 방식과 동일하게 파싱
+    # second step for chat models to collect judgments
+    if is_conversational_true:
+        second_examples = _prepare_second_pass(examples, original_responses)
+        responses = run_inference(second_examples, model, tokenizer, do_sample=False)
+
     outputs = []
     for index in range(len(candidates)):
-        num_judgments = 1
+        num_judgments = 1 if isinstance(original_responses[index], str) else len(original_responses[index])
+
         judgments = []
-        resp = responses[index]
-        judgments.append(_parse_response(resp, candidates[index].answer, candidates[index].question.text))
+        if isinstance(responses[index], str):
+            for j in range(num_judgments):
+                judgments.append(
+                    _parse_response(
+                        responses[index * num_return_sequences + j],
+                        candidates[index].answer,
+                        candidates[index].question.text,
+                    )
+                )
+        else:
+            for resp in responses[index]:
+                judgments.append(_parse_response(resp, candidates[index].answer, candidates[index].question.text))
+
         acceptable_count = sum(judgments)
-        outputs.append((round(acceptable_count / num_judgments), original_responses[index], judgments))
+        outputs.append(
+            (round(acceptable_count / num_judgments), original_responses[index], judgments)
+        )
 
     return outputs
