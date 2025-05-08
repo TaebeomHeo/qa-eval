@@ -9,6 +9,7 @@ py3.10/
 
 node_modules/
 **/node_modules/
+data/.DS_Store
 
 # C extensions
 *.so
