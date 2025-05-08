@@ -1,0 +1,13 @@
+{
+  "name": "qa-eval",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Question Answering Evaluation using Ollama",
+  "main": "src/qaeval/openllm.js",
+  "scripts": {
+    "test": "node src/qaeval/openllm.js"
+  },
+  "dependencies": {
+    "node-fetch": "^3.3.2"
+  }
+} 
